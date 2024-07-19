@@ -1,8 +1,9 @@
 "use strict";
+let editing = false;
 const errorMesgEl = document.querySelector(".error_message");
 const budgetInputEl = document.querySelector(".budget_input");
 const expenseDesEl = document.querySelector(".expensess_input");
-const emotionEl = document.querySelector(".output"); //idk??
+const emotionEl = document.querySelector(".output"); 
 const expenseAmountEl = document.querySelector(".expensess_amount");
 const tblRecordEl = document.querySelector(".tbl_data");
 const cardsContainer = document.querySelector(".cards");
@@ -28,17 +29,83 @@ function btnEvents() {
     expensesFun();
   });
   btnEmotionCal.addEventListener("click", (e) => {
+    console.log("emotion function being used ");
     e.preventDefault();
-    emotionsFun();
-  })
+    emotionsFun(); //add emotion u click
+  }) 
 }
 //==================Calling Btns Event==========
 document.addEventListener("DOMContentLoaded", btnEvents);
 //emotions function
+
+ // Initialize Chart.js pie chart
+ const ctx = document.getElementById('piechart').getContext('2d');
+ const initialData = {
+   labels: ['Happy', 'Sad', 'Stressed', 'Neutral'],
+   datasets: [{
+     label: 'Emotional Spending',
+     data: [0, 0, 0, 0],
+     backgroundColor: [
+       'rgb(66, 245, 170)',
+       'rgb(66, 135, 245)',
+       'rgb(221, 128, 255)',
+       'rgb(235, 214, 124)'
+     ],
+     hoverOffset: 4
+   }]
+ };
+
+ const config = {
+   type: 'pie',
+   data: initialData,
+ };
+
+ const myPieChart = new Chart(ctx, config);
+ 
+ function updatePieChartData(emotionCounts) {
+  myPieChart.data.datasets[0].data = [
+    emotionCounts['Happy'] || 0,
+    emotionCounts['Sad'] || 0,
+    emotionCounts['Stressed'] || 0,
+    emotionCounts['Neutral'] || 0
+  ];
+  myPieChart.update();
+}
+
+let emotionCounts = {
+  Happy: 0,
+  Sad: 0,
+  Stressed: 0,
+  Neutral: 0
+};
+
 function emotionsFun(){
   const selectElement =  document.querySelector('#list'); //from html
   const output = selectElement.value;
-  document.querySelector('.output').textContent = output; //show emotion selected
+  console.log("output is " + output); //print
+  const previousEmotion = document.querySelector('.output').textContent;
+  console.log("previous emotion is "+ previousEmotion); //print
+
+  document.querySelector('.output').textContent = output; //show emotion selected on screen
+  console.log("NOW output is "+ output); //print
+   // Increment the count for the selected emotion
+if(previousEmotion != output){
+  console.log("add if yaint editing");
+  emotionCounts[output]++;
+}
+   
+
+   //if edit button clicked, do subtract previous emotion if emotion is edited
+  if (editing == true) {
+    console.log("WE R EDITING SUBTRACT EMOTION");
+    if( emotionCounts[output] >= 1 ){ //prevent out of bounds
+      emotionCounts[output]--; //decrement previous emotion.
+    }
+  }
+  editing = false; //reset editing right away
+
+   updatePieChartData(emotionCounts);
+   console.log(" happy count "+ emotionCounts.Happy+" neutral count "+emotionCounts.Neutral+" sad count "+emotionCounts.Sad+" stressed count "+emotionCounts.Stressed); //print
 }
 //================= Expenses Function============
 function expensesFun() { //i think put whole emotion inside expense, so it can show in card
@@ -91,6 +158,8 @@ function addExpenses(expensesPara) {
   // btn edit event
   btnEdit.forEach((btnedit) => {
     btnedit.addEventListener("click", (el) => {
+      console.log("edit button clicked");
+      editing = true; //this global boolean should go to emotions function and decrement emotion
       let id;
       content_id.forEach((ids) => {
         id = ids.firstElementChild.dataset.id;
@@ -100,6 +169,11 @@ function addExpenses(expensesPara) {
       let expenses = itemList.filter(function (item) {
         return item.id == id;
       });
+
+          // Decrement the count for the previous emotion
+    console.log("decrement prev emotion, edit bool = "+editing);
+    emotionsFun(); //must call emotions function if ur editng
+
       expenseDesEl.value = expenses[0].title;
       expenseAmountEl.value = expenses[0].amount;
       let temp_list = itemList.filter(function (item) {
@@ -108,7 +182,7 @@ function addExpenses(expensesPara) {
       itemList = temp_list;
     });
   });
-  //============ btn delete
+  //============ btn delete also pie chart
   btnDel.forEach((btndel) => {
     btndel.addEventListener("click", (el) => {
       let id;
