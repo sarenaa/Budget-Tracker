@@ -43,15 +43,8 @@
         <p> I'm feeling :
           <span class="output"></span>
       </p>
-      <button type="button" id="btn_emotions" onclick="emotionsFun()">Select Emotion</button>
-        <!-- <script type="text/javascript">
-            function getOption() {
-                selectElement = 
-                      document.querySelector('#list');
-                const output = selectElement.value;
-                document.querySelector('.output').textContent = output;
-            }
-        </script> -->
+      <button type="button" id="btn_emotions" >Select Emotion</button>
+   
         </form>
       </div>
     </div>
@@ -94,40 +87,6 @@
     </div>
     <!-- Table Content Close -->
   </div>
-
-  <script> //SCRIPT FOR EMOTION PIE CHART
-    let emotionlist = [];
-
-    function emotionCounts(){
-       const happy = 0; const sad = 0; const stressed = 0; const neutral = 0; 
-
-    }
-    //call pie chart
-    document.addEventListener('DOMContentLoaded', function() {
-
-      const data = {
-        labels: ['Happy', 'Sad', 'Stressed', 'Neutral'],
-        datasets: [{
-          label: 'Emotional Spending',
-          data: [10, 20, 30, 40], 
-          backgroundColor: [
-            'rgb(66, 245, 170)',
-            'rgb(66, 135, 245)',
-            'rgb(221, 128, 255)',
-            'rgb(235, 214, 124)'
-          ],
-          hoverOffset: 4
-        }]
-      };
-
-      const config = {
-        type: 'pie',
-        data: data,
-      };
-
-      const ctx = document.getElementById('piechart').getContext('2d');
-      new Chart(ctx, config);
-    });
-  </script>
+<!--do i need pie chart thing here???-->
 </body>
 </html>
