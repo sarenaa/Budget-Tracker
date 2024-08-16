@@ -1,9 +1,11 @@
 "use strict";
 let editing = false;
+let deleting = false;
+let clickedDelete = false;
 const errorMesgEl = document.querySelector(".error_message");
 const budgetInputEl = document.querySelector(".budget_input");
 const expenseDesEl = document.querySelector(".expensess_input");
-const emotionEl = document.querySelector(".output"); 
+const emotionEl = document.querySelector(".output");
 const expenseAmountEl = document.querySelector(".expensess_amount");
 const tblRecordEl = document.querySelector(".tbl_data");
 const cardsContainer = document.querySelector(".cards");
@@ -29,14 +31,17 @@ function btnEvents() {
     expensesFun();
   });
   btnEmotionCal.addEventListener("click", (e) => {
-    console.log("emotion function being used ");
+    console.log("emotion function called ");
     e.preventDefault();
     emotionsFun(); //add emotion u click
-  }) 
+  })
 }
 //==================Calling Btns Event==========
 document.addEventListener("DOMContentLoaded", btnEvents);
 //emotions function
+
+
+
 
  // Initialize Chart.js pie chart
  const ctx = document.getElementById('piechart').getContext('2d');
@@ -55,10 +60,16 @@ document.addEventListener("DOMContentLoaded", btnEvents);
    }]
  };
 
+
+
+
  const config = {
    type: 'pie',
    data: initialData,
  };
+
+
+
 
  const myPieChart = new Chart(ctx, config);
  
@@ -72,6 +83,9 @@ document.addEventListener("DOMContentLoaded", btnEvents);
   myPieChart.update();
 }
 
+
+
+
 let emotionCounts = {
   Happy: 0,
   Sad: 0,
@@ -79,38 +93,44 @@ let emotionCounts = {
   Neutral: 0
 };
 
+
+
+
 function emotionsFun(){
   const selectElement =  document.querySelector('#list'); //from html
   const output = selectElement.value;
-  console.log("output is " + output); //print
+  console.log("output is " + output); //output prints emotion selected. instead of output how to make it find correct id?
   const previousEmotion = document.querySelector('.output').textContent;
   console.log("previous emotion is "+ previousEmotion); //print
 
+
+
+
   document.querySelector('.output').textContent = output; //show emotion selected on screen
-  console.log("NOW output is "+ output); //print
+  //console.log("NOW output is "+ output); //print
    // Increment the count for the selected emotion
-if(previousEmotion != output){
-  console.log("add if yaint editing");
+if(previousEmotion != output || clickedDelete == true ){ //deleting or clicked? be able to add EMOITON1 AFTER U DELETE EMOTION1
+  console.log("output to increase: "+output);
   emotionCounts[output]++;
+  clickedDelete = false;
 }
-   
-
    //if edit button clicked, do subtract previous emotion if emotion is edited
-  if (editing == true) {
-    console.log("WE R EDITING SUBTRACT EMOTION");
-    if( emotionCounts[output] >= 1 ){ //prevent out of bounds
-      emotionCounts[output]--; //decrement previous emotion.
+  if (editing == true || deleting == true ) {
+    if(previousEmotion){
+      emotionCounts[previousEmotion]--;
     }
+   
+    editing = false;
+    deleting = false;
+    clickedDelete = true;
   }
-  editing = false; //reset editing right away
-
    updatePieChartData(emotionCounts);
    console.log(" happy count "+ emotionCounts.Happy+" neutral count "+emotionCounts.Neutral+" sad count "+emotionCounts.Sad+" stressed count "+emotionCounts.Stressed); //print
 }
 //================= Expenses Function============
 function expensesFun() { //i think put whole emotion inside expense, so it can show in card
-  let expensesDescValue = expenseDesEl.value;
-  let expenseAmountValue = expenseAmountEl.value;
+  let expensesDescValue = expenseDesEl.value; //expense description
+  let expenseAmountValue = expenseAmountEl.value; //expense prce
   if (
     expensesDescValue == "" ||
     expenseAmountValue == "" ||
@@ -123,6 +143,10 @@ function expensesFun() { //i think put whole emotion inside expense, so it can s
     expenseDesEl.value = "";
     const selectElement =  document.querySelector('#list'); //from html
     const emotionSelected = selectElement.value; //get selected emotion
+    console.log("emotion selected is "+emotionSelected);
+
+
+
 
     // store the value inside the object
     let expenses = {
@@ -139,66 +163,63 @@ function expensesFun() { //i think put whole emotion inside expense, so it can s
   }
 }
 //========================Add Expenses================== object id is after .
-function addExpenses(expensesPara) {
+function addExpenses(expensesPara) { //tbl tr content is ordering of html
   const html = `<ul class="tbl_tr_content">
             <li data-id=${expensesPara.id}>${expensesPara.id + 1}</li>
             <li>${expensesPara.title}</li>
             <li><span>$</span>${expensesPara.amount}</li>
-            <li>${expensesPara.emotion}</li> 
+            <li>${expensesPara.emotion}</li>
             <li>
               <button type="button" class="btn_edit">Edit</button>
               <button type="button" class="btn_delete">Delete</button>
             </li>
           </ul>`;
   tblRecordEl.insertAdjacentHTML("beforeend", html);
+  //initializeEventListeners(); //add in.
   //=================== Edit=======================
   const btnEdit = document.querySelectorAll(".btn_edit");
   const btnDel = document.querySelectorAll(".btn_delete");
-  const content_id = document.querySelectorAll(".tbl_tr_content");
+  //const content_id = document.querySelectorAll(".tbl_tr_content");
   // btn edit event
   btnEdit.forEach((btnedit) => {
     btnedit.addEventListener("click", (el) => {
-      console.log("edit button clicked");
+      let id = el.target.getAttribute('data-id'); // Get ID from button
+      console.log("edit button clicked, edit bool= "+editing);
       editing = true; //this global boolean should go to emotions function and decrement emotion
-      let id;
-      content_id.forEach((ids) => {
-        id = ids.firstElementChild.dataset.id;
-      });
+      // content_id.forEach((ids) => {
+      //   id = ids.firstElementChild.dataset.id;
+      // });
       let element = el.target.parentElement.parentElement;
       element.remove();
-      let expenses = itemList.filter(function (item) {
-        return item.id == id;
-      });
-
-          // Decrement the count for the previous emotion
-    console.log("decrement prev emotion, edit bool = "+editing);
-    emotionsFun(); //must call emotions function if ur editng
-
-      expenseDesEl.value = expenses[0].title;
+      let expenses = itemList.filter(item => item.id == id); // Get specific expense item
+    console.log("id is "+id);
+    emotionsFun(); //decrease previous emotion. must call emotions function if ur editng
+      expenseDesEl.value = expenses[0].title; //how to edit what id u click
+      console.log("item "+id+" name is: "+expenseDesEl.value); //idk
       expenseAmountEl.value = expenses[0].amount;
-      let temp_list = itemList.filter(function (item) {
-        return item.id != id;
-      });
-      itemList = temp_list;
+      console.log("item "+id+" cost is: "+expenseAmountEl.value);
+      emotionEl.value = expenses[0].emotion;
+      itemList = itemList.filter(item => item.id != id); // Remove item from the list
     });
   });
   //============ btn delete also pie chart
   btnDel.forEach((btndel) => {
     btndel.addEventListener("click", (el) => {
-      let id;
-      content_id.forEach((ids) => {
-        id = ids.firstElementChild.dataset.id;
-      });
-      let element = el.target.parentElement.parentElement;
+      console.log("DELETE button clicked, delete bool= "+deleting);
+      deleting = true; //this global boolean should go to emotions function and decrement emotion
+    emotionsFun(); //must call emotions function if ur editng
+    let id = el.target.getAttribute('data-id'); // Get ID from button
+    let element = el.target.parentElement.parentElement;
       element.remove();
-      let temp_list = itemList.filter(function (item) {
-        return item.id != id;
-      });
-      itemList = temp_list;
+      itemList = itemList.filter(item => item.id != id); // Remove item from the list
       showBalance();
     });
   });
 }
+
+
+
+
 //===============Budget Function=================
 function budgetFun() {
   const budgetValue = budgetInputEl.value;
@@ -236,3 +257,5 @@ function errorMessage(message) {
     errorMesgEl.classList.remove("error");
   }, 2500);
 }
+
+
